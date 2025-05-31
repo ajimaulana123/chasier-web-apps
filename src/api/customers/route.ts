@@ -1,6 +1,10 @@
 
+import { db } from '@/db/client';
+import { customers } from '@/db/schema';
+import { eq, like, or } from 'drizzle-orm';
+
 // Mock data untuk demo
-let customers = [
+let mockCustomers = [
   {
     id: 1,
     name: 'Ahmad Wijaya',
@@ -23,10 +27,10 @@ let customers = [
 
 export const getCustomers = async (params?: { search?: string }) => {
   try {
-    let filteredCustomers = customers;
+    let filteredCustomers = mockCustomers;
     
     if (params?.search) {
-      filteredCustomers = customers.filter(customer =>
+      filteredCustomers = mockCustomers.filter(customer =>
         customer.name.toLowerCase().includes(params.search!.toLowerCase()) ||
         customer.phone.includes(params.search!)
       );
@@ -44,16 +48,16 @@ export const getCustomers = async (params?: { search?: string }) => {
   }
 };
 
-export const createCustomer = async (customerData: Omit<typeof customers[0], 'id' | 'currentDebt' | 'createdAt'>) => {
+export const createCustomer = async (customerData: Omit<typeof mockCustomers[0], 'id' | 'currentDebt' | 'createdAt'>) => {
   try {
     const newCustomer = {
-      id: customers.length + 1,
+      id: mockCustomers.length + 1,
       ...customerData,
       currentDebt: 0,
       createdAt: new Date().toISOString(),
     };
     
-    customers.push(newCustomer);
+    mockCustomers.push(newCustomer);
     
     return {
       success: true,
@@ -66,3 +70,33 @@ export const createCustomer = async (customerData: Omit<typeof customers[0], 'id
     };
   }
 };
+
+// Fungsi untuk menggunakan database Drizzle (uncomment ketika database sudah ready)
+/*
+export const getCustomersFromDB = async (params?: { search?: string }) => {
+  try {
+    let query = db.select().from(customers);
+    
+    if (params?.search) {
+      query = query.where(
+        or(
+          like(customers.name, `%${params.search}%`),
+          like(customers.phone, `%${params.search}%`)
+        )
+      );
+    }
+    
+    const result = await query;
+    
+    return {
+      success: true,
+      data: result,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Failed to fetch customers',
+    };
+  }
+};
+*/

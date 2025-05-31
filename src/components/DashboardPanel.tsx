@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ShoppingCart, Package, Users, DollarSign, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getReports } from '@/api/reports/route';
 
 const DashboardPanel = () => {
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -25,12 +25,11 @@ const DashboardPanel = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/reports?type=dashboard');
-      if (!response.ok) throw new Error('Failed to fetch');
-      
-      const result = await response.json();
+      const result = await getReports('dashboard');
       if (result.success) {
         setDashboardData(result.data);
+      } else {
+        throw new Error(result.error);
       }
     } catch (error) {
       toast({

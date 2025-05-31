@@ -1,4 +1,6 @@
 
+import { db } from '@/db/client';
+
 export const getReports = async (type: string = 'dashboard') => {
   try {
     // Mock data untuk demo
@@ -40,3 +42,43 @@ export const getReports = async (type: string = 'dashboard') => {
     };
   }
 };
+
+// Fungsi untuk menggunakan database Drizzle (uncomment ketika database sudah ready)
+/*
+export const getDashboardReports = async () => {
+  try {
+    // Query dashboard data dari database
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+    
+    // Contoh query untuk revenue hari ini
+    const todayRevenue = await db
+      .select({ 
+        total: sum(sales.total) 
+      })
+      .from(sales)
+      .where(
+        and(
+          gte(sales.createdAt, todayStart),
+          lte(sales.createdAt, todayEnd)
+        )
+      );
+    
+    return {
+      success: true,
+      data: {
+        todayRevenue: todayRevenue[0]?.total || 0,
+        // ... query lainnya
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Failed to fetch dashboard reports',
+    };
+  }
+};
+*/
