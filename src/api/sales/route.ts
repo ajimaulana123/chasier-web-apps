@@ -1,6 +1,4 @@
 
-import { NextRequest, NextResponse } from 'next/server';
-
 // Mock data untuk demo
 let sales = [
   {
@@ -15,52 +13,47 @@ let sales = [
   },
 ];
 
-export async function GET(request: NextRequest) {
+export const getSales = async (params?: { startDate?: string; endDate?: string }) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-    
     let filteredSales = sales;
     
-    if (startDate && endDate) {
+    if (params?.startDate && params?.endDate) {
       filteredSales = sales.filter(sale => {
         const saleDate = new Date(sale.date);
-        return saleDate >= new Date(startDate) && saleDate <= new Date(endDate);
+        return saleDate >= new Date(params.startDate!) && saleDate <= new Date(params.endDate!);
       });
     }
     
-    return NextResponse.json({
+    return {
       success: true,
       data: filteredSales,
-    });
+    };
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch sales' },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: 'Failed to fetch sales',
+    };
   }
-}
+};
 
-export async function POST(request: NextRequest) {
+export const createSale = async (saleData: Omit<typeof sales[0], 'id' | 'date'>) => {
   try {
-    const body = await request.json();
     const newSale = {
       id: sales.length + 1,
-      ...body,
+      ...saleData,
       date: new Date().toISOString(),
     };
     
     sales.push(newSale);
     
-    return NextResponse.json({
+    return {
       success: true,
       data: newSale,
-    });
+    };
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to create sale' },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: 'Failed to create sale',
+    };
   }
-}
+};

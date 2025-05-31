@@ -1,11 +1,6 @@
 
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function GET(request: NextRequest) {
+export const getReports = async (type: string = 'dashboard') => {
   try {
-    const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'dashboard';
-    
     // Mock data untuk demo
     const dashboardData = {
       todayRevenue: 2450000,
@@ -34,14 +29,14 @@ export async function GET(request: NextRequest) {
       ],
     };
     
-    return NextResponse.json({
+    return {
       success: true,
       data: dashboardData,
-    });
+    };
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch reports' },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: 'Failed to fetch reports',
+    };
   }
-}
+};

@@ -1,6 +1,4 @@
 
-import { NextRequest, NextResponse } from 'next/server';
-
 // Mock data untuk demo - nanti akan diganti dengan Drizzle ORM
 let products = [
   {
@@ -29,112 +27,101 @@ let products = [
   },
 ];
 
-export async function GET(request: NextRequest) {
+export const getProducts = async (params?: { search?: string; category?: string }) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search');
-    const category = searchParams.get('category');
-    
     let filteredProducts = products;
     
-    if (search) {
+    if (params?.search) {
       filteredProducts = filteredProducts.filter(product =>
-        product.name.toLowerCase().includes(search.toLowerCase()) ||
-        product.code.toLowerCase().includes(search.toLowerCase())
+        product.name.toLowerCase().includes(params.search!.toLowerCase()) ||
+        product.code.toLowerCase().includes(params.search!.toLowerCase())
       );
     }
     
-    if (category && category !== 'all') {
+    if (params?.category && params.category !== 'all') {
       filteredProducts = filteredProducts.filter(product =>
-        product.category.toLowerCase() === category.toLowerCase()
+        product.category.toLowerCase() === params.category!.toLowerCase()
       );
     }
     
-    return NextResponse.json({
+    return {
       success: true,
       data: filteredProducts,
-    });
+    };
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch products' },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: 'Failed to fetch products',
+    };
   }
-}
+};
 
-export async function POST(request: NextRequest) {
+export const createProduct = async (productData: Omit<typeof products[0], 'id' | 'createdAt'>) => {
   try {
-    const body = await request.json();
     const newProduct = {
       id: products.length + 1,
-      ...body,
+      ...productData,
       createdAt: new Date().toISOString(),
     };
     
     products.push(newProduct);
     
-    return NextResponse.json({
+    return {
       success: true,
       data: newProduct,
-    });
+    };
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to create product' },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: 'Failed to create product',
+    };
   }
-}
+};
 
-export async function PUT(request: NextRequest) {
+export const updateProduct = async (id: number, updateData: Partial<typeof products[0]>) => {
   try {
-    const body = await request.json();
-    const { id, ...updateData } = body;
-    
     const productIndex = products.findIndex(p => p.id === id);
     if (productIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: 'Product not found' },
-        { status: 404 }
-      );
+      return {
+        success: false,
+        error: 'Product not found',
+      };
     }
     
     products[productIndex] = { ...products[productIndex], ...updateData };
     
-    return NextResponse.json({
+    return {
       success: true,
       data: products[productIndex],
-    });
+    };
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to update product' },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: 'Failed to update product',
+    };
   }
-}
+};
 
-export async function DELETE(request: NextRequest) {
+export const deleteProduct = async (id: number) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const id = parseInt(searchParams.get('id') || '0');
-    
     const productIndex = products.findIndex(p => p.id === id);
     if (productIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: 'Product not found' },
-        { status: 404 }
-      );
+      return {
+        success: false,
+        error: 'Product not found',
+      };
     }
     
     products.splice(productIndex, 1);
     
-    return NextResponse.json({
+    return {
       success: true,
       message: 'Product deleted successfully',
-    });
+    };
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to delete product' },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: 'Failed to delete product',
+    };
   }
-}
+};

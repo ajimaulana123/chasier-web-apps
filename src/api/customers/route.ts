@@ -1,6 +1,4 @@
 
-import { NextRequest, NextResponse } from 'next/server';
-
 // Mock data untuk demo
 let customers = [
   {
@@ -23,52 +21,48 @@ let customers = [
   },
 ];
 
-export async function GET(request: NextRequest) {
+export const getCustomers = async (params?: { search?: string }) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search');
-    
     let filteredCustomers = customers;
     
-    if (search) {
+    if (params?.search) {
       filteredCustomers = customers.filter(customer =>
-        customer.name.toLowerCase().includes(search.toLowerCase()) ||
-        customer.phone.includes(search)
+        customer.name.toLowerCase().includes(params.search!.toLowerCase()) ||
+        customer.phone.includes(params.search!)
       );
     }
     
-    return NextResponse.json({
+    return {
       success: true,
       data: filteredCustomers,
-    });
+    };
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch customers' },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: 'Failed to fetch customers',
+    };
   }
-}
+};
 
-export async function POST(request: NextRequest) {
+export const createCustomer = async (customerData: Omit<typeof customers[0], 'id' | 'currentDebt' | 'createdAt'>) => {
   try {
-    const body = await request.json();
     const newCustomer = {
       id: customers.length + 1,
-      ...body,
+      ...customerData,
       currentDebt: 0,
       createdAt: new Date().toISOString(),
     };
     
     customers.push(newCustomer);
     
-    return NextResponse.json({
+    return {
       success: true,
       data: newCustomer,
-    });
+    };
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to create customer' },
-      { status: 500 }
-    );
+    return {
+      success: false,
+      error: 'Failed to create customer',
+    };
   }
-}
+};
