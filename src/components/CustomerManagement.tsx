@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Edit, Trash2, Users, CreditCard, AlertCircle, Clock } from 'lucide-react';
@@ -15,6 +15,10 @@ const CustomerManagement = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditCreditDialogOpen, setIsEditCreditDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [editingCredit, setEditingCredit] = useState(null);
   const [activeTab, setActiveTab] = useState('customers');
 
   const [customers, setCustomers] = useState([
@@ -108,6 +112,12 @@ const CustomerManagement = () => {
     note: '',
   });
 
+  const [creditForm, setCreditForm] = useState({
+    amount: '',
+    description: '',
+    dueDate: '',
+  });
+
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.phone.includes(searchTerm)
@@ -139,6 +149,96 @@ const CustomerManagement = () => {
     toast({
       title: "Berhasil",
       description: "Pelanggan berhasil ditambahkan!",
+    });
+  };
+
+  const handleEditCustomer = (customer) => {
+    setEditingCustomer(customer);
+    setNewCustomer({
+      name: customer.name,
+      phone: customer.phone,
+      address: customer.address,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateCustomer = () => {
+    if (!newCustomer.name || !newCustomer.phone) {
+      toast({
+        title: "Error",
+        description: "Nama dan nomor telepon harus diisi!",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedCustomer = {
+      ...editingCustomer,
+      name: newCustomer.name,
+      phone: newCustomer.phone,
+      address: newCustomer.address,
+    };
+
+    setCustomers(customers.map(c => c.id === editingCustomer.id ? updatedCustomer : c));
+    setNewCustomer({ name: '', phone: '', address: '' });
+    setEditingCustomer(null);
+    setIsEditDialogOpen(false);
+    
+    toast({
+      title: "Berhasil",
+      description: "Data pelanggan berhasil diperbarui!",
+    });
+  };
+
+  const handleDeleteCustomer = (id, customerName) => {
+    setCustomers(customers.filter(c => c.id !== id));
+    setCreditTransactions(creditTransactions.filter(ct => ct.customerId !== id));
+    setPayments(payments.filter(p => p.customerId !== id));
+    
+    toast({
+      title: "Berhasil",
+      description: `Pelanggan ${customerName} berhasil dihapus!`,
+    });
+  };
+
+  const handleEditCredit = (credit) => {
+    setEditingCredit(credit);
+    setCreditForm({
+      amount: credit.amount.toString(),
+      description: credit.description,
+      dueDate: credit.dueDate,
+    });
+    setIsEditCreditDialogOpen(true);
+  };
+
+  const handleUpdateCredit = () => {
+    if (!creditForm.amount || !creditForm.description) {
+      toast({
+        title: "Error",
+        description: "Jumlah dan deskripsi harus diisi!",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedCredit = {
+      ...editingCredit,
+      amount: parseInt(creditForm.amount),
+      description: creditForm.description,
+      dueDate: creditForm.dueDate,
+    };
+
+    setCreditTransactions(creditTransactions.map(ct => 
+      ct.id === editingCredit.id ? updatedCredit : ct
+    ));
+    
+    setCreditForm({ amount: '', description: '', dueDate: '' });
+    setEditingCredit(null);
+    setIsEditCreditDialogOpen(false);
+    
+    toast({
+      title: "Berhasil",
+      description: "Data piutang berhasil diperbarui!",
     });
   };
 
@@ -327,6 +427,55 @@ const CustomerManagement = () => {
                 </Dialog>
               </div>
 
+              {/* Edit Customer Dialog */}
+              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Pelanggan</DialogTitle>
+                    <DialogDescription>
+                      Perbarui informasi pelanggan
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-name">Nama Lengkap</Label>
+                      <Input
+                        id="edit-name"
+                        value={newCustomer.name}
+                        onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
+                        placeholder="Nama pelanggan"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-phone">Nomor Telepon</Label>
+                      <Input
+                        id="edit-phone"
+                        value={newCustomer.phone}
+                        onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})}
+                        placeholder="08123456789"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-address">Alamat</Label>
+                      <Input
+                        id="edit-address"
+                        value={newCustomer.address}
+                        onChange={(e) => setNewCustomer({...newCustomer, address: e.target.value})}
+                        placeholder="Alamat lengkap"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                      Batal
+                    </Button>
+                    <Button onClick={handleUpdateCustomer}>
+                      Perbarui Data
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -365,12 +514,38 @@ const CustomerManagement = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditCustomer(customer)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Hapus Pelanggan</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Apakah Anda yakin ingin menghapus pelanggan "{customer.name}"? 
+                                    Semua data transaksi dan pembayaran akan ikut terhapus.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteCustomer(customer.id, customer.name)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Hapus
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -394,6 +569,56 @@ const CustomerManagement = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Edit Credit Dialog */}
+              <Dialog open={isEditCreditDialogOpen} onOpenChange={setIsEditCreditDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Piutang</DialogTitle>
+                    <DialogDescription>
+                      Perbarui informasi piutang
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-amount">Jumlah</Label>
+                      <Input
+                        id="edit-amount"
+                        type="number"
+                        value={creditForm.amount}
+                        onChange={(e) => setCreditForm({...creditForm, amount: e.target.value})}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-description">Deskripsi</Label>
+                      <Input
+                        id="edit-description"
+                        value={creditForm.description}
+                        onChange={(e) => setCreditForm({...creditForm, description: e.target.value})}
+                        placeholder="Deskripsi transaksi"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-dueDate">Jatuh Tempo</Label>
+                      <Input
+                        id="edit-dueDate"
+                        type="date"
+                        value={creditForm.dueDate}
+                        onChange={(e) => setCreditForm({...creditForm, dueDate: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsEditCreditDialogOpen(false)}>
+                      Batal
+                    </Button>
+                    <Button onClick={handleUpdateCredit}>
+                      Perbarui Piutang
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -436,7 +661,11 @@ const CustomerManagement = () => {
                             )}
                           </TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleEditCredit(transaction)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                           </TableCell>

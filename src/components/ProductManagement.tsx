@@ -16,6 +16,7 @@ const ProductManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
   const [products, setProducts] = useState([
@@ -123,6 +124,63 @@ const ProductManagement = () => {
     toast({
       title: "Berhasil",
       description: "Produk berhasil ditambahkan!",
+    });
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setNewProduct({
+      code: product.code,
+      name: product.name,
+      category: product.category,
+      purchasePrice: product.purchasePrice.toString(),
+      sellingPrice: product.sellingPrice.toString(),
+      stock: product.stock.toString(),
+      unit: product.unit,
+      minStock: product.minStock.toString(),
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateProduct = () => {
+    if (!newProduct.name || !newProduct.code) {
+      toast({
+        title: "Error",
+        description: "Nama dan kode produk harus diisi!",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedProduct = {
+      ...editingProduct,
+      code: newProduct.code,
+      name: newProduct.name,
+      category: newProduct.category,
+      purchasePrice: parseInt(newProduct.purchasePrice) || 0,
+      sellingPrice: parseInt(newProduct.sellingPrice) || 0,
+      stock: parseInt(newProduct.stock) || 0,
+      unit: newProduct.unit,
+      minStock: parseInt(newProduct.minStock) || 0,
+    };
+
+    setProducts(products.map(p => p.id === editingProduct.id ? updatedProduct : p));
+    setNewProduct({
+      code: '',
+      name: '',
+      category: '',
+      purchasePrice: '',
+      sellingPrice: '',
+      stock: '',
+      unit: '',
+      minStock: '',
+    });
+    setEditingProduct(null);
+    setIsEditDialogOpen(false);
+    
+    toast({
+      title: "Berhasil",
+      description: "Produk berhasil diperbarui!",
     });
   };
 
@@ -299,6 +357,118 @@ const ProductManagement = () => {
             </Dialog>
           </div>
 
+          {/* Edit Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Edit Produk</DialogTitle>
+                <DialogDescription>
+                  Perbarui informasi produk
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-code">Kode Produk</Label>
+                    <Input
+                      id="edit-code"
+                      value={newProduct.code}
+                      onChange={(e) => setNewProduct({...newProduct, code: e.target.value})}
+                      placeholder="IDM001"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-name">Nama Produk</Label>
+                    <Input
+                      id="edit-name"
+                      value={newProduct.name}
+                      onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                      placeholder="Nama produk"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-category">Kategori</Label>
+                    <Select value={newProduct.category} onValueChange={(value) => setNewProduct({...newProduct, category: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih kategori" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(category => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-unit">Satuan</Label>
+                    <Input
+                      id="edit-unit"
+                      value={newProduct.unit}
+                      onChange={(e) => setNewProduct({...newProduct, unit: e.target.value})}
+                      placeholder="pcs, botol, kg"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-purchasePrice">Harga Beli</Label>
+                    <Input
+                      id="edit-purchasePrice"
+                      type="number"
+                      value={newProduct.purchasePrice}
+                      onChange={(e) => setNewProduct({...newProduct, purchasePrice: e.target.value})}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-sellingPrice">Harga Jual</Label>
+                    <Input
+                      id="edit-sellingPrice"
+                      type="number"
+                      value={newProduct.sellingPrice}
+                      onChange={(e) => setNewProduct({...newProduct, sellingPrice: e.target.value})}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-stock">Stok</Label>
+                    <Input
+                      id="edit-stock"
+                      type="number"
+                      value={newProduct.stock}
+                      onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-minStock">Stok Minimum</Label>
+                    <Input
+                      id="edit-minStock"
+                      type="number"
+                      value={newProduct.minStock}
+                      onChange={(e) => setNewProduct({...newProduct, minStock: e.target.value})}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Batal
+                </Button>
+                <Button onClick={handleUpdateProduct}>
+                  Perbarui Produk
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           {/* Product Table */}
           <div className="rounded-md border overflow-hidden">
             <Table>
@@ -357,7 +527,11 @@ const ProductManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditProduct(product)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <AlertDialog>

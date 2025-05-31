@@ -59,7 +59,95 @@ const ReportsPanel = () => {
   const profitMargin = (totalProfit / totalRevenue) * 100;
 
   const handleExportReport = (type) => {
-    // Simulate export functionality
+    // Simulate PDF export
+    if (type === 'PDF') {
+      const reportData = {
+        title: 'Laporan Penjualan',
+        period: dateRange,
+        totalRevenue,
+        totalProfit,
+        totalTransactions,
+        salesData,
+        topProducts,
+        categoryPerformance
+      };
+      
+      // Create a simple text-based report
+      const reportContent = `
+LAPORAN PENJUALAN TOKO
+======================
+
+Periode: ${dateRange}
+Tanggal: ${new Date().toLocaleDateString('id-ID')}
+
+RINGKASAN
+---------
+Total Pendapatan: Rp ${totalRevenue.toLocaleString()}
+Total Keuntungan: Rp ${totalProfit.toLocaleString()}
+Total Transaksi: ${totalTransactions}
+Rata-rata per Transaksi: Rp ${averageTransaction.toFixed(0)}
+Margin Keuntungan: ${profitMargin.toFixed(1)}%
+
+PRODUK TERLARIS
+---------------
+${topProducts.map((product, index) => 
+  `${index + 1}. ${product.name} - ${product.sold} unit - Rp ${product.revenue.toLocaleString()}`
+).join('\n')}
+
+PERFORMA KATEGORI
+-----------------
+${categoryPerformance.map(cat => 
+  `${cat.name}: Rp ${cat.sales.toLocaleString()} (${cat.percentage}%)`
+).join('\n')}
+      `;
+      
+      // Create and download the file
+      const blob = new Blob([reportContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `laporan-penjualan-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    
+    // Simulate Excel export
+    if (type === 'Excel') {
+      const csvContent = [
+        ['Laporan Penjualan Toko'],
+        [''],
+        ['Periode:', dateRange],
+        ['Tanggal:', new Date().toLocaleDateString('id-ID')],
+        [''],
+        ['RINGKASAN'],
+        ['Total Pendapatan', totalRevenue],
+        ['Total Keuntungan', totalProfit],
+        ['Total Transaksi', totalTransactions],
+        ['Rata-rata per Transaksi', Math.round(averageTransaction)],
+        ['Margin Keuntungan (%)', profitMargin.toFixed(1)],
+        [''],
+        ['PRODUK TERLARIS'],
+        ['Nama Produk', 'Unit Terjual', 'Pendapatan'],
+        ...topProducts.map(product => [product.name, product.sold, product.revenue]),
+        [''],
+        ['PERFORMA KATEGORI'],
+        ['Kategori', 'Penjualan', 'Keuntungan', 'Persentase'],
+        ...categoryPerformance.map(cat => [cat.name, cat.sales, cat.profit, cat.percentage + '%']),
+      ].map(row => row.join(',')).join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `laporan-penjualan-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    
     toast({
       title: "Export berhasil",
       description: `Laporan ${type} berhasil diunduh!`,
