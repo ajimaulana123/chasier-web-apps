@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Minus, ShoppingCart, Search, Trash2, Calculator, Receipt } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,8 +20,9 @@ const SalesInterface = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const [lastTransaction, setLastTransaction] = useState(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const products = [
+  const [products, setProducts] = useState([
     {
       id: 1,
       code: 'IDM001',
@@ -61,7 +63,7 @@ const SalesInterface = () => {
       stock: 30,
       category: 'Minuman',
     },
-  ];
+  ]);
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -136,6 +138,22 @@ const SalesInterface = () => {
       });
       return;
     }
+    setIsConfirmOpen(true);
+  };
+
+  const confirmTransaction = () => {
+    // Kurangi stok produk
+    const updatedProducts = products.map(product => {
+      const cartItem = cart.find(item => item.id === product.id);
+      if (cartItem) {
+        return {
+          ...product,
+          stock: product.stock - cartItem.quantity
+        };
+      }
+      return product;
+    });
+    setProducts(updatedProducts);
 
     const transaction = {
       id: Date.now(),
@@ -152,6 +170,7 @@ const SalesInterface = () => {
     setCart([]);
     setDiscount(0);
     setPaymentMethod('cash');
+    setIsConfirmOpen(false);
     setIsReceiptOpen(true);
 
     toast({
@@ -349,6 +368,27 @@ const SalesInterface = () => {
           </Card>
         )}
       </div>
+
+      {/* Transaction Confirmation Dialog */}
+      <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Transaksi</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin memproses transaksi dengan total{' '}
+              <strong>Rp {calculateTotal().toLocaleString()}</strong>?
+              <br />
+              Stok produk akan berkurang secara otomatis.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmTransaction}>
+              Proses Transaksi
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Receipt Dialog */}
       <Dialog open={isReceiptOpen} onOpenChange={setIsReceiptOpen}>

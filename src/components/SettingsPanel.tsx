@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,29 @@ const SettingsPanel = () => {
   const [storeAddress, setStoreAddress] = useState('');
   const [storePhone, setStorePhone] = useState('');
   const { toast } = useToast();
+
+  // Check for existing dark mode preference
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setDarkMode(isDark);
+  }, []);
+
+  // Handle dark mode toggle
+  const handleDarkModeToggle = (checked) => {
+    setDarkMode(checked);
+    if (checked) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+    
+    toast({
+      title: "Berhasil",
+      description: `Mode ${checked ? 'gelap' : 'terang'} telah diaktifkan`,
+    });
+  };
 
   const handleExportData = async () => {
     try {
@@ -159,7 +182,7 @@ const SettingsPanel = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Moon className="h-5 w-5" />
+              {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
               Pengaturan Tampilan
             </CardTitle>
             <CardDescription>
@@ -176,7 +199,7 @@ const SettingsPanel = () => {
               </div>
               <Switch
                 checked={darkMode}
-                onCheckedChange={setDarkMode}
+                onCheckedChange={handleDarkModeToggle}
               />
             </div>
             <Separator />
